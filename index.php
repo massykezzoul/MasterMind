@@ -47,55 +47,7 @@ if (isset($_POST['save'])) {
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Mastermind</title>
     <meta type="title">
-    <style type="text/css">
-        .textCenter {
-            text-align : center;
-        }
-        .redBorder {
-            border: solid red;
-        }
-
-        .greenBorder {
-            border: solid green;
-        }
-
-        .blueBorder {
-            border: solid blue;
-        }
-
-        .centerBox {
-            border: medium dashed blue;
-            width: 50%;
-            min-width: 500px;
-            margin: auto;
-            margin-top: 30px;
-            padding: 30px;
-            padding-bottom: 0;
-        }
-
-        .centerBox>h1 {
-            text-align: center;
-        }
-
-        .centerBox>form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-evenly;
-            min-height: 120px;
-            margin: auto;
-            margin-top: 30px;
-        }
-
-        .author {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 40px;
-            background-color: whitesmoke;
-            height: 100px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
