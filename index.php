@@ -18,6 +18,7 @@ if (isset($_POST['load'])) { // if cliqué sur boutton chargé
         }
     } else {
         echo 'Aucun chargement possible <br>';
+        unset($_POST);
     }
 }
     
@@ -103,6 +104,11 @@ if (isset($_POST['save'])) {
                                     foreach ($jeu->getEssais() as $key) {
                                         echo '<li>' . $key->getEssai() . ' : Bien placés : '. $key->getBp() . ',Mal placés :' . $key->getMp() . '</li>';
                                     }
+                                    if (isset($_COOKIE['nom']) && isset($_COOKIE['jeu']) && isset($_COOKIE['essai'])) {
+                                        setcookie('nom', $_SESSION['nom'] , time() - 1000);
+                                        setcookie('jeu', $_SESSION['jeu'] , time() - 1000);
+                                        setcookie('essai', $_SESSION['essai'] , time() - 1000);
+                                    }
                                     unset($_SESSION);
                                     unset($_POST);
                                     session_destroy();
@@ -158,7 +164,7 @@ if (isset($_POST['save'])) {
                 <label for="nom">Votre nom : </label>
                 <input type="text" name="nom" id="nom" />
                 <input type="submit" name="play" value="Jouer nouveau jeu !" />
-            <?php if (isset($_COOKIE['jeu']) && isset($_COOKIE['nom'])) { ?><input type="submit" name="load" value="Charger"><?php } ?>
+            <?php if (isset($_COOKIE['jeu']) && isset($_COOKIE['nom'])) {?><input type="submit" name="load" value="Charger"><?php } ?>
             </form>
         <?php
         if (isset($_COOKIE['jeu']) && isset($_COOKIE['nom'])) { // il y'a une sauvgarde dans un cookie
