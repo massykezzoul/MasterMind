@@ -1,7 +1,12 @@
 <?php
 session_start();
 //require 'MasterMind.php';
-include("MasterMind.php");
+//require 'Players.php';
+//include("MasterMind.php");
+
+spl_autoload_register(function ($class_name) {
+    include $class_name . '.php';
+});
 
 if (isset($_POST['exit'])) { // annulé le jeu
     unset($_SESSION);
