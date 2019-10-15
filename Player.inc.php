@@ -1,9 +1,5 @@
 <?php
-    //require 'MasterMind.php';
-    spl_autoload_register(function ($class_name) {
-        include $class_name . '.php';
-    });
-    class Player {
+    class Player {
         private $name; // Nom du joueur
         private $jeu;  // Partie de masterMind sauvgardé
         private $date_sauvgarde; // date de sauvgarde

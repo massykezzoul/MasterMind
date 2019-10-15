@@ -4,45 +4,67 @@ session_start();
 //require 'Players.php';
 //include("MasterMind.php");
 
+/*
+    Variables POST utilisé:
+    $_POST['nom'] : contient le nom du joueur définie seulement lors de la première tantative
+    $_POST['essai'] : contient le dernier essai saisie
+    $_POST['save'] : si définit alors sauvgarder la partie en cours (partie en cours est dans $_SESSION[])
+    $_POST['load'] : si définit le joueur veut charger une partie.
+        $_POST['loadName'] : contient le nom de la sauvgarde à charger (le nom du joueur). est définit seulement si $_POST['load'] est définit
+    $_POST['exit'] : si définit le jouer veut quitter 
+
+    Variables SESSION utilisé :
+    $_SESSION['nom'] : contient le nom du joueur définie seulement lors de la première tantative
+    $_SESSION['essai'] : contient le dernier essai saisie // obligatoire dans le cas oû $_POST['essai'] disparait après un recharger manuelle de la page par l'user
+    $_SESSION['jeu'] : contient le jeu en cours (une instance de la classe MasterMind (Pensé à unserialize() avant utilisation);
+
+    Cookie définie :
+    $_COOKIE['sauvgardes'] => Contient un objet de la classe Players (Pensé à unserialize() avant utilisation)
+*/
+/*
 spl_autoload_register(function ($class_name) {
-    include $class_name . '.php';
+    include_once $class_name . '.php';
 });
-
-if (isset($_POST['exit'])) { // annulé le jeu
+*/
+require_once('classes.inc.php');
+/* annulé le jeu */
+if (isset($_POST['exit'])) {
     unset($_SESSION);
     unset($_POST);
     session_destroy();
 }
 
-if (isset($_POST['load'])) { // if cliqué sur boutton chargé
-    if (isset($_COOKIE['nom']) && !isset($_SESSION['nom'])) { // 
-        $_SESSION['nom'] = $_COOKIE['nom'];
-        if (isset($_COOKIE['jeu']) && !isset($_SESSION['jeu']) && isset($_COOKIE['essai']) && !isset($_SESSION['essai'])) {
-           $_SESSION['jeu'] = $_COOKIE['jeu'];
-           $_SESSION['essai'] = $_COOKIE['essai'];
-        }
-    } else {
-        echo 'Aucun chargement possible <br>';
-        unset($_POST);
+/* Chargement d'une sauvgarde */
+if (isset($_POST['load']) && isset($_POST['loadName']) && isset($_COOKIE['sauvgardes'])) { // if cliqué sur boutton chargé
+    $players = unserialize($_COOKIE['sauvgardes']); // chargement des sauvgardes
+    $player = $players->getPlayerWithName($_POST['loadName']);
+    if ($player != null) {
+        /* Chargement réussi, sauvgarder le joueur et le jeu dans $_SESSION */
+        $_SESSION['nom'] = $player->getName();
+        $_SESSION['essai'] = $player->getJeu()->getEssais()[$player->getJeu()->getNbEssai()-1]->getEssai(); // faut simplifier cette chose
+        $_SESSION['jeu'] = serialize($player->getJeu());
     }
+    unset($player);
+    unset($players);
 }
-    
-if (isset($_POST['save'])) {
-    if (isset($_SESSION['nom'])) {
-        setcookie('nom', $_SESSION['nom'] , time() + 24*3600);
-        $_COOKIE['nom'] = $_SESSION['nom'];
-        if (isset($_SESSION['jeu']) && isset($_SESSION['essai'])) {
-            setcookie('jeu', $_SESSION['jeu'] , time() + 24*3600);
-            setcookie('essai', $_SESSION['essai'] , time() + 24*3600);
-            $_COOKIE['jeu'] = $_SESSION['jeu'];
-            $_COOKIE['essai'] = $_SESSION['essai'];
-        }
-    }
+
+/* Sauvgarde */
+if (isset($_POST['save']) && isset($_SESSION['nom']) && isset($_SESSION['jeu']) && isset($_SESSION['essai'])) {
+    $tempSauvgarde = time() + 24*36000; // une journée
+    /* regarder si une sauvgarde existe déja */
+    if (isset($_COOKIE['sauvgardes'])) 
+        $saves = unserialize($_COOKIE['sauvgardes']);
+    else
+        $saves = new Players();
+    $saves->addPlayer(new Player($_SESSION['nom'],unserialize($_SESSION['jeu'])));
+    setcookie('sauvgardes', serialize($saves) , $tempSauvgarde);
+    /* Indispensable pour affiché la sauvgarde imédiatement dans la page d'acceuil (sans actualisé) */
+    $_COOKIE['sauvgardes'] = serialize($saves);
+
     unset($_SESSION);
     unset($_POST);
     session_destroy();
 }
-
 
 ?>
 <html lang="fr">
@@ -57,7 +79,6 @@ if (isset($_POST['save'])) {
 </head>
 
 <body>
-
     <div class="centerBox">
         <?php
         if (isset($_POST['nom']) || isset($_SESSION['nom'])) { // Jeu en cours
@@ -78,8 +99,10 @@ if (isset($_POST['save'])) {
                 <form action="" method="POST" class="blueBorder">
                     <label id="essai">Tentez votre chance : </label>
                     <input type="text" name="essai" id="essai" />
-                    <input type="submit" value="OK">
-                    <input type="submit" name="exit" value="Exit">
+                    <span class="submit">
+                        <input type="submit" value="OK">
+                        <input type="submit" name="exit" value="Exit">
+                    </span>
                 </form>
                 <?php
 
@@ -109,11 +132,7 @@ if (isset($_POST['save'])) {
                                     foreach ($jeu->getEssais() as $key) {
                                         echo '<li>' . $key->getEssai() . ' : Bien placés : '. $key->getBp() . ',Mal placés :' . $key->getMp() . '</li>';
                                     }
-                                    if (isset($_COOKIE['nom']) && isset($_COOKIE['jeu']) && isset($_COOKIE['essai'])) {
-                                        setcookie('nom', $_SESSION['nom'] , time() - 1000);
-                                        setcookie('jeu', $_SESSION['jeu'] , time() - 1000);
-                                        setcookie('essai', $_SESSION['essai'] , time() - 1000);
-                                    }
+                                    /* ------- Ajouter ici la suppression de la sauvgarde -------- */
                                     unset($_SESSION);
                                     unset($_POST);
                                     session_destroy();
@@ -143,9 +162,11 @@ if (isset($_POST['save'])) {
                         <?php } ?>
                         <label id="essai">ReTentez votre chance : </label>
                         <input type="text" name="essai" id="essai" />
-                        <input type="submit" value="OK">
-                        <input type="submit" name="exit" value="Exit">
-                        <input type="submit" name="save" value="Save">
+                        <span class="submit">
+                            <input type="submit" value="OK">
+                            <input type="submit" name="exit" value="Exit">
+                            <input type="submit" name="save" value="Save">
+                        </span>
                     </form>
             <?php
                     }
@@ -169,24 +190,39 @@ if (isset($_POST['save'])) {
                 <label for="nom">Votre nom : </label>
                 <input type="text" name="nom" id="nom" />
                 <input type="submit" name="play" value="Jouer nouveau jeu !" />
-            <?php if (isset($_COOKIE['jeu']) && isset($_COOKIE['nom'])) {?><input type="submit" name="load" value="Charger"><?php } ?>
+            <!--<?php if (isset($_COOKIE['jeu']) && isset($_COOKIE['nom'])) {?><input type="submit" name="load" value="Charger"><?php } ?> -->
             </form>
         <?php
-        if (isset($_COOKIE['jeu']) && isset($_COOKIE['nom'])) { // il y'a une sauvgarde dans un cookie
-            // TODO une boucle pour afficher tout les jeu sauvgardé 
+        if (isset($_COOKIE['sauvgardes'])) {
+            // TODO une boucle pour afficher tout les jeu sauvgardé
             ?>
             <hr>
             <h2>Jeu sauvgardé</h2>
+            <form id="load" action="" method="POST">
+            <?php
+                $players = unserialize($_COOKIE['sauvgardes']);
+                for ($i=0; $i<$players->getSize();$i++ ) {
+                    $name = $players->getPlayer($i)->getName();
+            ?>
             <p> 
-                <strong>Nom : </strong> <?php echo $_COOKIE['nom']; ?>
+                <input type="radio" name ="loadName" id="<?php echo $name; ?>" value="<?php echo $name; ?>">
+                <label for="<?php echo $name; ?>"> <?php echo $name; ?></label><br>
             </p>
+            <?php
+                }
+            ?>
+            <span class="submit">
+                <input type="submit" value="Charger" name="load">
+                <input type="submit" value="Supprimer" name="delete">
+            </span>
+            </form>
             <?php
         }
         }
         ?>
         <div class="author">
             <p>
-                Created By Massili Kezzoul &copy; Sept. 2019
+                Created By <a href="https://github.com/massykezzoul">Massili Kezzoul</a> &copy; Sept. 2019
             </p>
         </div>
     </div>

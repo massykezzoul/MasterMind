@@ -1,11 +1,4 @@
 <?php
-    //require 'MasterMind.php';
-    //require 'Player.php';
-    //include("MasterMind.php");
-    spl_autoload_register(function ($class_name) {
-        include $class_name . '.php';
-    });
-
     class Players {
         private $players; // Tableau contenant tout les joueurs sauvgardé
 
@@ -53,6 +46,13 @@
                 echo "Segmentation fault on Players::getPlayer($i)<br>";
                 return null;
             }
+        }
+
+        public function getPlayerWithName($name) {
+            foreach ($this->players as $player)
+                if ($player->getName() === $name)
+                    return $player;
+            return null;            
         }
 
         public function setPlayer($i,$player) {
