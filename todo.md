@@ -8,6 +8,8 @@
   - Supprimer les ancien cookie stocké;
   - les remplacé par un seul cookie qui va contenir une instance de la class `Players`;
   - Gérer tout les joueurs avec ce cookie là;
-- DESIGN;
+- Classe `Scores` pour stocker les meilleurs scores;
+- implementer `Scores` puis tester;
 - Supprimer l'affichage du code secret lors de la première utilisation (Utile pour le débogage);
+- Refonte graphique;
   
